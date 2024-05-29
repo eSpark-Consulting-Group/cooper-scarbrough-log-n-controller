@@ -16,3 +16,6 @@
     - 1 x UV Light (12VAC ~5A)
 - The system must also feature a display (TBD) connected to ESP32 that is interactive via buttons. Below are the buttons and required functionality of each button:
     - TBD
+
+### System Diagram
+![image](https://github.com/eSpark-Consultants/CooperScarbrough-LogNController/assets/76909080/544034c5-9355-4f07-bbbc-2e4d017d4973)
