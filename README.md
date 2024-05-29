@@ -13,7 +13,7 @@
     - 1 x Air pump (110/120VAC 15A)
     - 1 x Air pump (110/120VAC 3A)
     - 1 x AC Motor (120VAC 9A)
-    - 1 x UV Light (12VAC ~5A)
+    - 1 x UV Light (120VAC ~5A)
 - The system must also feature a display (TBD) connected to ESP32 that is interactive via buttons. Below are the buttons and required functionality of each button:
     - TBD
 
