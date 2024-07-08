@@ -320,6 +320,10 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=IYQEAHGR
 
+[GeneratedDocument1]
+DocumentPath=Project Outputs for LogNController\Design Rule Check - PCB_LogNController-v1.html
+DItemRevisionGUID=
+
 [Configuration1]
 Name=Sources
 ParameterCount=0
