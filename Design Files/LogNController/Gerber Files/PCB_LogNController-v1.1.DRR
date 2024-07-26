@@ -1,5 +1,5 @@
 ----------------------------------------------------------------------------------------------------------------------------------
-NCDrill File Report For: PCB_LogNController-v1.1.PcbDoc   7/26/2024  1:26:38 PM
+NCDrill File Report For: PCB_LogNController-v1.1.PcbDoc   7/26/2024  5:50:28 PM
 ----------------------------------------------------------------------------------------------------------------------------------
 
 Layer Pair : Top Layer to Bottom Layer
@@ -8,7 +8,7 @@ ASCII SlotHoles File : PCB_LogNController-v1.1-SlotHoles.TXT
 
 Tool       Hole Size               Hole Tolerance               Hole Type       Hole Count   Plated         Tool Travel
 ----------------------------------------------------------------------------------------------------------------------------------
-T1      12mil (0.3mm)                                             Round             359       PTH        99.98inch (2539.46mm)
+T1      12mil (0.3mm)                                             Round             361       PTH        100.39inch (2550.00mm)
 T2      24mil (0.6mm)                                             Slot              4         PTH        1.50inch (38.16mm)
 T3      35mil (0.9mm)                                             Round             4         PTH        1.17inch (29.64mm)
 T4      39mil (1mm)                                               Round             2         PTH        0.20inch (5.08mm)
@@ -26,6 +26,6 @@ T15     24mil (0.62mm)                                            Round         
 T16     71mil (1.8mm)                                             Round             12        NPTH       7.15inch (181.71mm)
 T17     138mil (3.5mm)                                            Round             4         NPTH       23.08inch (586.18mm)
 ----------------------------------------------------------------------------------------------------------------------------------
-Totals                                                                              489
+Totals                                                                              491
 
-Total Processing Time (hh:mm:ss) : 00:00:01
+Total Processing Time (hh:mm:ss) : 00:00:00
