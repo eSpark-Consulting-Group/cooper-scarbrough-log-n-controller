@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------------------
-Gerber File Extension Report For: PCB_LogNController-v1.1.GBR   7/26/2024  5:49:58 PM
+Gerber File Extension Report For: PCB_LogNController-v1.1.GBR   8/7/2024  3:02:14 PM
 ------------------------------------------------------------------------------------------
 
 
@@ -14,10 +14,16 @@ Layer Extension     Layer Description
 .GBS                Bottom Solder                           
 .GBP                Bottom Paste                            
 .GBO                Bottom Overlay                          
+.GM1                Dimension                               
+.GM2                Fabrication                             
 .GM13               Board Outline                           
+.GM15               Mechanical 15                           
 .GKO                Keep-Out Layer                          
 .GPT                Top Pad Master                          
 .GPB                Bottom Pad Master                       
+.1                  Dielectric 1                            
+.GML                Multi-Layer                             
 .GD1                Drill Drawing                           
 .GG1                Drill Guide                             
+.GM                 Profile                                 
 ------------------------------------------------------------------------------------------
