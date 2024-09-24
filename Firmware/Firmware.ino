@@ -296,17 +296,17 @@ void script1Running() {
 
   // Check initial sensor values and control pumps
   if (oxygenSensor > 5) {
-    // gpio.setFoodSourcePump_1();
+    gpio.setFoodSourcePump_1();
     displayValue();
   }
   if (pHvalues < 7) {
-    // gpio.setBasePump_2();
-    // gpio.stopAcidPump_3();
+    gpio.setBasePump_2();
+    gpio.stopAcidPump_3();
     displayValue();
   }
   if (pHvalues > 7) {
-    // gpio.setAcidPump_3();
-    //gpio.stopBasePump_2();
+    gpio.setAcidPump_3();
+    gpio.stopBasePump_2();
     displayValue();
   }
   delay(100);
