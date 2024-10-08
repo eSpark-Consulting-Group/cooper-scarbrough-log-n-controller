@@ -64,8 +64,6 @@ void GPIOManager::resetPump() {
 void GPIOManager::setFoodSourcePump_1() {
   mcp.digitalWrite(mcp.eGPB0, HIGH);
   delay(100);
-  mcp.digitalWrite(mcp.eGPB0, LOW);
-  delay(100);
 }
 
 
