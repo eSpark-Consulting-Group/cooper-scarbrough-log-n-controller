@@ -15,7 +15,7 @@
 
 ## Step 3: Prepare the Python Script Folder  
   1- Open the python_script folder on your computer.
-  2- Ensure that this folder is empty except for the  `main.py` file. If there are other files, move or delete them to keep it clean.
+  2- Ensure that this folder is empty except for the `main.py` and `run_main.bat` files. If there are other files of `.csv`, delete them to keep it clean.
   3- Paste the copied .csv file into the python_script folder
 
 ### Step 4: Run the Python Script
