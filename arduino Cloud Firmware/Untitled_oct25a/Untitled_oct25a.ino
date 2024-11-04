@@ -1,21 +1,19 @@
-#include "arduino_secrets.h"
 #include <DFRobot_MCP23017.h>
 
 #include "thingProperties.h"
 #include <Wire.h>
 #include <SPI.h>
-#include "gfx_conf.h"  // Assuming you have a GFX library for your display
+#include "gfx_conf.h"  
 #include "IO_GPIO.hpp"
 #include "FirstScript.hpp"
-// #include "logEvents.hpp"
-// #include <WiFi.h>
-// extern String logEnt;
 
+/* Script running parameters*/
 #define OXYGEN_PPM 5
-/*for 90 mints running */
-const unsigned long TOTAL_RUN_TIME = 120 * 60 * 1000;  // 90 minutes in milliseconds
-// const unsigned long INTERVAL = 10 * 60 * 1000;        // 10 minutes in milliseconds
-const unsigned long INTERVAL = 10 * 1000;
+#define PH_PPM 7
+const unsigned long TOTAL_RUN_TIME = 120;  // 90 minutes in milliseconds
+const unsigned long INTERVAL = 10;  // 10 minutes in milliseconds
+
+/* variables*/
 unsigned long startTime = 0;
 unsigned long lastIntervalTime = 0;
 unsigned long elapsedTime = 0;  // Store the elapsed time
@@ -29,6 +27,7 @@ uint16_t startColor = TFT_RED;
 
 float oxygenSensor = 0;
 float pHvalues = 0;
+// uint8_t time = 0;
 uint8_t acid;
 uint8_t base;
 uint8_t stimulant;
@@ -52,17 +51,7 @@ void script3();
 void script4();
 void script5();
 
-void resetVariable();
-void drawUI();
-void drawButton(int x, int y, const char *label, uint16_t color);
-void drawCircleRunButton(int x, int y, const char *label, uint16_t color);
-void drawCircleStopButton(int x, int y, const char *label, uint16_t color);
-void drawInfoBox(int x, int y, const char *label, uint8_t data, const char *value);
-void colorChangeStates();
-void displayValue();
-void script1Running();
-
-// Array of function pointers
+// // Array of function pointers
 void (*scripts[MAX_SCRIPTS])() = { script1, script2, script3, script4, script5 };
 
 void setup() {
@@ -84,8 +73,7 @@ void setup() {
   
   script.setup();
   delay(500);
-  logent = "Time , pH(actual), pH(Traget) ,Oxygen(actual), Oxygen(target),P1(Stimulant),P2(Acid),P3(Base)";
-  Serial.println("Time , pH(actual), pH(Traget) ,Oxygen(actual), Oxygen(target),P1(Stimulant),P2(Acid),P3(Base)");
+  // logEvents = "Time , pH(actual), pH(Traget) ,Oxygen(actual), Oxygen(target),P1(Stimulant),P2(Acid),P3(Base)";
 }
 
 void loop() {
@@ -93,11 +81,11 @@ void loop() {
   // Your code here 
   colorChangeStates(); 
 
-  delay(10);
+  delay(100);
 
   drawUI();
 
-  delay(10);
+  delay(100);
 
   scripts[selectedScript - 1]();
 
@@ -135,14 +123,11 @@ void drawUI() {
   tft.setCursor(270, 155);
   tft.println(isRunning ? "Running" : "Idle");
 
-  uint8_t time = 0;
-  float ph = 0;
-  float oxyegn = 0;
-  drawInfoBox(20, 179, "Time", time, "/ 120:00");
+  drawInfoBox(20, 179, "Time", elapsedTime, "/ ", TOTAL_RUN_TIME);
   
-  drawInfoBox(180, 179, "pH", ph, "/ 7");
+  drawInfoBox(180, 179, "pH", pHvalues, "/ ", PH_PPM);
  
-  drawInfoBox(340, 179, "Oxygen", oxyegn, "/ 5");
+  drawInfoBox(340, 179, "Oxygen", oxygenSensor, "/ ", OXYGEN_PPM);
 
   // Draw Run and Stop buttons
   drawCircleRunButton(120, 250, "RUN", startColor);
@@ -174,7 +159,7 @@ void drawCircleStopButton(int x, int y, const char *label, uint16_t color) {
   tft.print(label);
 }
 
-void drawInfoBox(int x, int y, const char *label, uint8_t data, const char *value) {
+void drawInfoBox(int x, int y, const char *label, uint8_t data, const char *value, int values) {
   tft.drawRect(x, y, 140, 50, TFT_RED);
   tft.setCursor(x + 10, y + 10);
   tft.setTextColor(TFT_RED);
@@ -185,7 +170,11 @@ void drawInfoBox(int x, int y, const char *label, uint8_t data, const char *valu
   tft.setCursor(x + 50, y + 30);
   tft.setTextColor(TFT_WHITE);
   tft.println(value);
+  tft.setCursor(x + 60, y + 30);
+  tft.setTextColor(TFT_WHITE);
+  tft.println(values);
 }
+
 
 void colorChangeStates() {
   // Handle button presses to switch between scripts
@@ -270,13 +259,8 @@ void displayValue() {
   tft.println(oxygenSensor, 1);
  
   delay(100);
-    // entriesLog = "time: " + String(elapsedTime) + "\n" +
-    //              "pH: " + String(pHvalues, 1) + "\n" +
-    //              "oxygen: " + String(oxygenSensor, 1);
 
-  //  logent = String(elapsedTime) + ", " + String(pHvalues, 1) + ", " + String(oxygenSensor, 1);
-  // Serial.println(String(elapsedTime) + ", " + String(pHvalues, 1) + ", " + String(oxygenSensor, 1));
-  logent = String(elapsedTime) + ", " + String(pHvalues, 1) + "," + String(7) + "," + String(oxygenSensor, 1)+ "," + String(5) + ","+String(stimulant) +"," + String(acid) + ","+ String(base);
+  logEvents = String(elapsedTime) + ", " + String(pHvalues, 1) + "," + String(7) + "," + String(oxygenSensor, 1)+ "," + String(5) + ","+String(stimulant) +"," + String(acid) + ","+ String(base);
   Serial.println(String(elapsedTime) + ", " + String(pHvalues, 1) + "," + String(7) + "," + String(oxygenSensor, 1) + "," + String(5) + "," +String(stimulant) + "," + String(acid) + ","+ String(base));
   
   ArduinoCloud.update();
@@ -288,17 +272,14 @@ void script1() {
   if (isRunning) {
     gpio.setAirPump_4();
     gpio.setACmotor_5();
+    startTime = millis() / 60000;
+    lastIntervalTime = startTime;
+    script1Running();
     while (isRunning) {
-      lastIntervalTime = startTime;
-      script1Running();
-      unsigned long currentTime = millis();
+      
+      unsigned long currentTime = millis() / 60000;
       if (currentTime - startTime >= TOTAL_RUN_TIME) {
         Serial.println("Total time of 90 minutes has passed. Stopping the script.");
-        // isRunning = false;
-        // oxygenSensor = 0;
-        // startTime = 0;
-        // elapsedTime = 0;
-        // pHvalues = 0;
         resetVariable();
         displayValue();
         gpio.resetPump();
@@ -316,7 +297,6 @@ void script1() {
       }
       // Add a small delay to avoid high CPU usage in the loop
       delay(100);
-      // displayValue();
       
     }
   }
@@ -330,30 +310,21 @@ void script5() {}
 
 // INNER IMPLEMETATION OF SCRIPT
 void script1Running() {
-  // oxygenSensor = script.getOxygenSensorValue();
- oxygenSensor = random(2, 10);
-  // Serial.print("first value of oxygen sensor is: ");
-  // Serial.println(oxygenSensor, 1);
-
-  // pHvalues = script.getpHSensorValue();
-  pHvalues = random(2, 10);
-  // Serial.print("first value of pH sensor is: ");
-  // Serial.println(pHvalues, 1);
-
-  // Check initial sensor values and control pumps
-  if (oxygenSensor > 5) {
+  oxygenSensor = script.getOxygenSensorValue();
+  pHvalues = script.getpHSensorValue();
+  if (oxygenSensor > OXYGEN_PPM) {
     gpio.setFoodSourcePump_1();
     displayValue();
     stimulant = 1;
   }else{stimulant = 0;}
-  if (pHvalues < 7) {
+  if (pHvalues < PH_PPM) {
     gpio.setBasePump_2();
     gpio.stopAcidPump_3();
     displayValue();
     base = 1; 
     
   }else{base = 0;}
-  if (pHvalues > 7) {
+  if (pHvalues > PH_PPM) {
     gpio.setAcidPump_3();
     gpio.stopBasePump_2();
     displayValue();
@@ -371,10 +342,6 @@ void resetVariable() {
   pHvalues = 0;
 }
 
-/*
-  Since Logent is READ_WRITE variable, onLogentChange() is
-  executed every time a new value is received from IoT Cloud.
-*/
-void onLogentChange()  {
-  // Add your code here to act upon Logent change
+void onLogEventsChange()  {
+  // Add your code here to act upon LogEvents change
 }
