@@ -314,22 +314,23 @@ void script1Running() {
   pHvalues = script.getpHSensorValue();
   if (oxygenSensor > OXYGEN_PPM) {
     gpio.setFoodSourcePump_1();
-    displayValue();
+    // displayValue();
     stimulant = 1;
   }else{stimulant = 0;}
   if (pHvalues < PH_PPM) {
     gpio.setBasePump_2();
     gpio.stopAcidPump_3();
-    displayValue();
+    // displayValue();
     base = 1; 
     
   }else{base = 0;}
   if (pHvalues > PH_PPM) {
     gpio.setAcidPump_3();
     gpio.stopBasePump_2();
-    displayValue();
+    // displayValue();
     acid = 1;
   }else{acid = 0;}
+  displayValue();
   delay(100);
    
 }

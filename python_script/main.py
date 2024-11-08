@@ -41,6 +41,29 @@ else:
     # Clean up whitespace from columns (optional, if there are spaces around values)
     df = df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
 
+    # Format the 'TimeDuration' column as mm:ss
+    def format_time(duration):
+        try:
+            
+        
+            total_seconds = int(duration)  # Assuming the value is in seconds
+
+        # for sec
+            # hours = total_seconds // 3600
+            # minutes = (total_seconds % 3600) // 60
+            # seconds = total_seconds % 60
+            # return f"{hours:02}:{minutes:02}:{seconds:02}"
+
+        # for mints
+            minutes = (total_seconds ) // 60
+            seconds = total_seconds % 60
+            return f"{minutes:02}:{seconds:02}"
+        
+        except ValueError:
+            return duration  # return original if not convertible
+
+    df['TimeDuration'] = df['TimeDuration'].apply(format_time)
+
     # Display the updated DataFrame
     print(df)
 
