@@ -64,6 +64,10 @@ else:
 
     df['TimeDuration'] = df['TimeDuration'].apply(format_time)
 
+    df = df[df['TimeDuration'] != '00:00:00']
+
+    df = df.dropna(how='all')
+
     # Display the updated DataFrame
     print(df)
 

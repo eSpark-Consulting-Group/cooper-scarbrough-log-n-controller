@@ -16,6 +16,7 @@ const unsigned long INTERVAL = 10;  // 10 minutes in milliseconds
 /* variables*/
 unsigned long startTime = 0;
 unsigned long lastIntervalTime = 0;
+unsigned long elsTime = 1 ;
 unsigned long elapsedTime = 0;  // Store the elapsed time
 const int MAX_SCRIPTS = 5;
 uint16_t homeColor = TFT_RED;
@@ -238,27 +239,27 @@ void colorChangeStates() {
 
 void displayValue() {
   
-  elapsedTime = (millis() - startTime) / 60000;
+  // elapsedTime = (millis() - startTime) / 60000;
   tft.fillRect(30, 179 + 30, 40, 10, TFT_BLACK);
   tft.setCursor(20 + 10, 179 + 30);
   tft.setTextColor(TFT_WHITE);
   tft.println(elapsedTime);
 
-  delay(100);
+  // delay(100);
 
   tft.fillRect(180 + 10, 179 + 30, 40, 10, TFT_BLACK);
   tft.setCursor(180 + 10, 179 + 30);
   tft.setTextColor(TFT_WHITE);
   tft.println(pHvalues, 1);
 
-  delay(100);
+  // delay(100);
 
   tft.fillRect(350, 179 + 30, 40, 10, TFT_BLACK);
   tft.setCursor(340 + 10, 179 + 30);
   tft.setTextColor(TFT_WHITE);
   tft.println(oxygenSensor, 1);
  
-  delay(100);
+  // delay(100);
 
   logEvents = String(elapsedTime) + ", " + String(pHvalues, 1) + "," + String(7) + "," + String(oxygenSensor, 1)+ "," + String(5) + ","+String(stimulant) +"," + String(acid) + ","+ String(base);
   Serial.println(String(elapsedTime) + ", " + String(pHvalues, 1) + "," + String(7) + "," + String(oxygenSensor, 1) + "," + String(5) + "," +String(stimulant) + "," + String(acid) + ","+ String(base));
@@ -278,6 +279,14 @@ void script1() {
     while (isRunning) {
       
       unsigned long currentTime = millis() / 60000;
+      // Check if 10 minutes have passed since the last reading
+      if (currentTime - lastIntervalTime >= INTERVAL) {
+        elapsedTime = ((currentTime - lastIntervalTime) * elsTime) / 1000 ;
+        elsTime ++;
+        lastIntervalTime = currentTime;
+        script1Running();
+      }
+
       if (currentTime - startTime >= TOTAL_RUN_TIME) {
         Serial.println("Total time of 90 minutes has passed. Stopping the script.");
         resetVariable();
@@ -285,18 +294,14 @@ void script1() {
         gpio.resetPump();
         
       }
-      // Check if 10 minutes have passed since the last reading
-      if (currentTime - lastIntervalTime >= INTERVAL) {
-        lastIntervalTime = currentTime;
-        script1Running();
-      }
+      
       if (!gpio.getStopGPIO()) {
         resetVariable();
         displayValue();
         gpio.resetPump();
       }
       // Add a small delay to avoid high CPU usage in the loop
-      delay(100);
+      // delay(100);
       
     }
   }
@@ -330,6 +335,7 @@ void script1Running() {
     // displayValue();
     acid = 1;
   }else{acid = 0;}
+  
   displayValue();
   delay(100);
    
