@@ -273,21 +273,21 @@ void script1() {
   if (isRunning) {
     gpio.setAirPump_4();
     gpio.setACmotor_5();
-    startTime = millis() / 60000;
+    startTime = millis() ;
     lastIntervalTime = startTime;
     script1Running();
     while (isRunning) {
       
       unsigned long currentTime = millis() ;
       // Check if 10 minutes have passed since the last reading
-      if (currentTime - lastIntervalTime >= INTERVAL * 60000) {
-        elapsedTime = ((currentTime - lastIntervalTime) * elsTime) / 60000 ;
+      if (currentTime - lastIntervalTime >= INTERVAL * 1000) {
+        elapsedTime = ((currentTime - lastIntervalTime) * elsTime) / 1000 ;
         elsTime ++;
         lastIntervalTime = currentTime;
         script1Running();
       }
 
-      if (currentTime - startTime >= TOTAL_RUN_TIME * 60000) {
+      if (currentTime - startTime >= TOTAL_RUN_TIME * 1000) {
         Serial.println("Total time of 90 minutes has passed. Stopping the script.");
         resetVariable();
         displayValue();
@@ -317,6 +317,7 @@ void script5() {}
 void script1Running() {
   oxygenSensor = script.getOxygenSensorValue();
   pHvalues = script.getpHSensorValue();
+
   if (oxygenSensor > OXYGEN_PPM) {
     gpio.setFoodSourcePump_1();
     // displayValue();
