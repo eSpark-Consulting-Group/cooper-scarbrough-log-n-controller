@@ -311,7 +311,7 @@ void script1Running() {
     gpio.setFoodSourcePump_1();
     // displayValue();
   }else{
-    stopFoodSourcePump_1();
+    gpio.stopFoodSourcePump_1();
   }
   if (pHvalues < PH_PPM) {
     gpio.setBasePump_2();

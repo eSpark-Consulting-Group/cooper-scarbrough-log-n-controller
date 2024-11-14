@@ -21,7 +21,7 @@ public:
   void setAirPump_4();
   void setACmotor_5();
   void setUVlight_6();
-  void stopFoodSourcePump_1()
+  void stopFoodSourcePump_1();
   void stopAcidPump_3();
   void stopBasePump_2();
   void resetPump();

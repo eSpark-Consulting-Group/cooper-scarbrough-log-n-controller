@@ -16,7 +16,7 @@ public:
   bool getStopGPIO();
 
   void setFoodSourcePump_1();
-  void stopFoodSourcePump_1()
+  void stopFoodSourcePump_1();
   void setBasePump_2();
   void setAcidPump_3();
   void setAirPump_4();
