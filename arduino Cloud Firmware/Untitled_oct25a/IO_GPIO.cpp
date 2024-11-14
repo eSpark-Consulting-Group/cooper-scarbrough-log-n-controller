@@ -70,6 +70,11 @@ void GPIOManager::setFoodSourcePump_1() {
   delay(100);
 }
 
+void GPIOManager::stopFoodSourcePump_1() {
+  mcp.digitalWrite(mcp.eGPB0, LOW);
+  delay(100);
+}
+
 
 void GPIOManager::setBasePump_2() {
   mcp.digitalWrite(mcp.eGPB1, HIGH);

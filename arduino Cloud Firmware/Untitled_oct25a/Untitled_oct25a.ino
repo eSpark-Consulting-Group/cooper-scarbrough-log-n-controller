@@ -261,8 +261,8 @@ void displayValue() {
  
   // delay(100);
 
-  logEvents = String(elapsedTime) + ", " + String(pHvalues, 1) + "," + String(7) + "," + String(oxygenSensor, 1)+ "," + String(5) + ","+String(stimulant) +"," + String(acid) + ","+ String(base);
-  Serial.println(String(elapsedTime) + ", " + String(pHvalues, 1) + "," + String(7) + "," + String(oxygenSensor, 1) + "," + String(5) + "," +String(stimulant) + "," + String(acid) + ","+ String(base));
+  logEvents = String(elapsedTime) + ", " + String(pHvalues, 1) + "," + String(7) + "," + String(oxygenSensor, 1)+ "," + String(5) + ","+String(stimulant) +"," + String(base) + ","+ String(acid);
+  Serial.println(String(elapsedTime) + ", " + String(pHvalues, 1) + "," + String(7) + "," + String(oxygenSensor, 1) + "," + String(5) + "," +String(stimulant) + "," + String(base) + ","+ String(acid));
   
   ArduinoCloud.update();
 }
@@ -322,7 +322,11 @@ void script1Running() {
     gpio.setFoodSourcePump_1();
     // displayValue();
     stimulant = 1;
-  }else{stimulant = 0;}
+  }else{
+    stimulant = 0;
+    gpio.stopFoodSourcePump_1();
+    }
+  
   if (pHvalues < PH_PPM) {
     gpio.setBasePump_2();
     gpio.stopAcidPump_3();
@@ -336,6 +340,13 @@ void script1Running() {
     // displayValue();
     acid = 1;
   }else{acid = 0;}
+
+  if(pHvalues == PH_PPM){
+     gpio.stopAcidPump_3();
+     gpio.stopBasePump_2();
+     acid = 0;
+     base = 0;
+  }
   
   displayValue();
   delay(100);
