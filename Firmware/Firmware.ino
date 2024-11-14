@@ -310,6 +310,8 @@ void script1Running() {
   if (oxygenSensor > OXYGEN_PPM) {
     gpio.setFoodSourcePump_1();
     // displayValue();
+  }else{
+    stopFoodSourcePump_1();
   }
   if (pHvalues < PH_PPM) {
     gpio.setBasePump_2();
@@ -320,6 +322,10 @@ void script1Running() {
     gpio.setAcidPump_3();
     gpio.stopBasePump_2();
     // displayValue();
+  }
+  if (pHvalues == PH_PPM){
+    gpio.stopBasePump_2();
+    gpio.stopAcidPump_3();
   }
   displayValue();
   delay(100);
