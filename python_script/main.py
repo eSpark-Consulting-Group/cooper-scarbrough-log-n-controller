@@ -2,6 +2,7 @@
 
 import pandas as pd
 import os
+from datetime import datetime
 
 # Get the current directory
 current_directory = os.getcwd()
@@ -33,7 +34,7 @@ else:
     df = df.applymap(lambda x: x.replace('"', ' ') if isinstance(x, str) else x)
 
     # Split the 'value' column into separate columns
-    df[['TimeDuration', 'pH(actual)', 'pH(target)', 'Oxygen(actual)', 'Oxygen(target)', 'P1(Stimulant)', 'P2(acid)', 'P3(Base)']] = df['value'].str.replace('"', '').str.split(',', expand=True)
+    df[['TimeDuration', 'pH(actual)', 'pH(target)', 'Oxygen(actual)', 'Oxygen(target)', 'P1(Stimulant)', 'P2(base)', 'P3(acid)']] = df['value'].str.replace('"', '').str.split(',', expand=True)
 
     # Drop the original 'value' column
     df = df.drop(columns=['value'])
@@ -44,34 +45,26 @@ else:
     # Format the 'TimeDuration' column as mm:ss
     def format_time(duration):
         try:
-            
-        
             total_seconds = int(duration)  # Assuming the value is in seconds
-
-        # for sec
-            # hours = total_seconds // 3600
-            # minutes = (total_seconds % 3600) // 60
-            # seconds = total_seconds % 60
-            # return f"{hours:02}:{minutes:02}:{seconds:02}"
-
-        # for mints
-            minutes = (total_seconds ) // 60
+            minutes = total_seconds // 60
             seconds = total_seconds % 60
             return f"{minutes:02}:{seconds:02}"
-        
         except ValueError:
             return duration  # return original if not convertible
 
     df['TimeDuration'] = df['TimeDuration'].apply(format_time)
 
-    df = df[df['TimeDuration'] != '00:00:00']
+    df = df[df['TimeDuration'] != '00:00']
 
     df = df.dropna(how='all')
 
     # Display the updated DataFrame
     print(df)
 
+    # Generate a timestamp for the file name
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    updated_file_name = f'Timestamp_{timestamp}.csv'
+
     # Save the updated DataFrame to a new CSV file without quotes around values
-    updated_file_name = 'updated_file.csv'
     df.to_csv(updated_file_name, index=False, quoting=0)  # quoting=0 means no quotes in output
     print(f"Updated CSV saved as '{updated_file_name}'")
