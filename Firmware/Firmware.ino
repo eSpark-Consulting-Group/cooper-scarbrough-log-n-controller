@@ -123,8 +123,12 @@ void drawUI() {
   drawInfoBox(340, 179, "Oxygen", oxygenSensor, "/ ", OXYGEN_PPM);
   // displayValue();
   // Draw Run and Stop buttons
-  drawCircleRunButton(120, 250, "RUN", startColor);
-  drawCircleStopButton(340, 250, "STOP", stopColor);
+  // drawCircleRunButton(120, 250, "RUN", startColor);
+  // drawCircleStopButton(340, 250, "STOP", stopColor);
+   drawCircleRunButton(340, 250, "RUN", startColor);
+   drawCircleStopButton(120, 250, "STOP", stopColor);
+ 
+ 
 
   // Draw Signal bar
   tft.drawRect(400, 300, 50, 120, TFT_RED);  // Signal box

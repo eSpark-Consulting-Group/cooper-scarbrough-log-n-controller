@@ -41,18 +41,18 @@ bool GPIOManager::getDownGPIO() {
 bool GPIOManager::getSelectGPIO() {
   return readPin(mcp.eGPA2);
 }
-// bool GPIOManager::getStartGPIO() {
-//   return readPin(mcp.eGPA4);
-// }
-// bool GPIOManager::getStopGPIO() {
-//   return readPin(mcp.eGPA5);
-// }
 bool GPIOManager::getStartGPIO() {
-  return readPin(mcp.eGPA5);
-}
-bool GPIOManager::getStopGPIO() {
   return readPin(mcp.eGPA4);
 }
+bool GPIOManager::getStopGPIO() {
+  return readPin(mcp.eGPA5);
+}
+// bool GPIOManager::getStartGPIO() {
+//   return readPin(mcp.eGPA5);
+// }
+// bool GPIOManager::getStopGPIO() {
+//   return readPin(mcp.eGPA4);
+// }
 
 // writting
 void GPIOManager::resetPump() {
