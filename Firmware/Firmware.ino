@@ -8,7 +8,7 @@
 
 #define OXYGEN_PPM 5
 #define PH_PPM 7
-
+#define OFF_DELAY (5*1000)
 /*for 90 mints running */
 const unsigned long TOTAL_RUN_TIME = 120 ;  // 90 minutes in milliseconds
 const unsigned long INTERVAL = 10;        // 10 minutes in milliseconds
@@ -33,7 +33,6 @@ uint16_t startColor = TFT_RED;
 
 float oxygenSensor = 0;
 float pHvalues = 0;
-
 
 GPIOManager gpio;
 getScripts script;
@@ -108,14 +107,17 @@ void drawUI() {
   tft.setCursor(30, 140);
   tft.println("Selected:");
   tft.setCursor(30, 155);
+  tft.setTextColor(TFT_GREEN, TFT_BLACK);
   tft.println(selectedScript == 1 ? "Microorganism #1" : "Microorganism #2");
 
   // Draw Status section
+  tft.setTextColor(TFT_RED, TFT_BLACK);
   tft.drawRect(260, 132, 200, 40, TFT_RED);
   tft.setCursor(270, 140);
   tft.println("Status:");
   tft.setCursor(270, 155);
-  tft.println(isRunning ? "Running" : "Idle");
+  tft.setTextColor(TFT_GREEN, TFT_BLACK);
+  tft.println(isRunning ? "Running" : "Idle   ");
 
   uint8_t time = 0;
   drawInfoBox(20, 179, "Time", time, "/ ", TOTAL_RUN_TIME);
@@ -127,9 +129,6 @@ void drawUI() {
   // drawCircleStopButton(340, 250, "STOP", stopColor);
    drawCircleRunButton(340, 250, "RUN", startColor);
    drawCircleStopButton(120, 250, "STOP", stopColor);
- 
- 
-
   // Draw Signal bar
   tft.drawRect(400, 300, 50, 120, TFT_RED);  // Signal box
 }
@@ -213,6 +212,7 @@ void colorChangeStates() {
   // Handle Stop button press to stop the script
   if (!gpio.getStopGPIO()) {
     if (!stopButtonPressed) {
+      Serial.println("STOPPEDDDDDDDDDDDDDDD");
       isRunning = false;
       stopButtonPressed = true;
     }
@@ -222,11 +222,11 @@ void colorChangeStates() {
 
   // Maintain button color change logic for display
   homeColor = gpio.getHomeGPIO() ? TFT_RED : TFT_GREEN;
-  upColor = gpio.getUpGPIO() ? TFT_RED : TFT_GREEN;
-  downColor = gpio.getDownGPIO() ? TFT_RED : TFT_GREEN;
+  upColor = !upButtonPressed ? TFT_RED : TFT_GREEN;
+  downColor = !downButtonPressed ? TFT_RED : TFT_GREEN;
   selectColor = gpio.getSelectGPIO() ? TFT_RED : TFT_GREEN;
-  startColor = gpio.getStartGPIO() ? TFT_RED : TFT_GREEN;
-  stopColor = gpio.getStopGPIO() ? TFT_RED : TFT_GREEN;
+  startColor = !startButtonPressed ? TFT_RED : TFT_GREEN;
+  stopColor = !stopButtonPressed ? TFT_RED : TFT_GREEN;
 }
 
 void displayValue() {
@@ -255,13 +255,14 @@ void script1() {
   if (isRunning) {
     gpio.setAirPump_4();
     gpio.setACmotor_5();
+    gpio.stopUVlight_6();
     startTime = millis();
     script1Running();
     while (isRunning) {
       lastIntervalTime = startTime;
       unsigned long currentTime = millis();
 
-  // Check if 10 minutes have passed since the last reading
+      // Check if 10 minutes have passed since the last reading
        if (currentTime - lastIntervalTime >= INTERVAL * 60000) {
         elapsedTime = ((currentTime - lastIntervalTime) * elsTime) / 60000 ;
         elsTime ++;
@@ -280,8 +281,23 @@ void script1() {
         displayValue();
         gpio.resetPump();
       }
-    
-     
+
+      if((millis() - gpio.foodSourceTime) >= OFF_DELAY)
+      {
+        Serial.println("FOOD STOPPEDDDDDDDDDDDDDDD");
+        gpio.stopFoodSourcePump_1();
+      }
+      if((millis() - gpio.basePumpTime) >= OFF_DELAY)
+      {
+        Serial.println("BASE STOPPEDDDDDDDDDDDDDDD");
+        gpio.stopBasePump_2();
+      }
+      if((millis() - gpio.acidPumpTime) >= OFF_DELAY)
+      {
+        Serial.println("ACID STOPPEDDDDDDDDDDDDDDD");
+        gpio.stopAcidPump_3();
+      }
+
       if (!gpio.getStopGPIO()) {
         resetVariable();
         displayValue();
@@ -302,34 +318,34 @@ void script5() {}
 
 // INNER IMPLEMETATION OF SCRIPT
 void script1Running() {
-  oxygenSensor = script.getOxygenSensorValue();
+  oxygenSensor = script.getOxygenSensorValue();//S-1
   Serial.print("first value of oxygen sensor is: ");
   Serial.println(oxygenSensor, 1);
 
-  pHvalues = script.getpHSensorValue();
+  pHvalues = script.getpHSensorValue();//S-2
   Serial.print("first value of pH sensor is: ");
   Serial.println(pHvalues, 1);
 
   // Check initial sensor values and control pumps
   if (oxygenSensor > OXYGEN_PPM) {
-    gpio.setFoodSourcePump_1();
+    gpio.setFoodSourcePump_1();//P-1
     // displayValue();
   }else{
-    gpio.stopFoodSourcePump_1();
+    gpio.stopFoodSourcePump_1();//P-1
   }
   if (pHvalues < PH_PPM) {
-    gpio.setBasePump_2();
-    gpio.stopAcidPump_3();
+    gpio.setBasePump_2();//P-2
+    gpio.stopAcidPump_3();//P-3
     // displayValue();
   }
-  if (pHvalues > PH_PPM) {
-    gpio.setAcidPump_3();
-    gpio.stopBasePump_2();
+  else if (pHvalues > PH_PPM) {
+    gpio.setAcidPump_3();//P-3
+    gpio.stopBasePump_2();//P-2
     // displayValue();
   }
-  if (pHvalues == PH_PPM){
-    gpio.stopBasePump_2();
-    gpio.stopAcidPump_3();
+  else if (pHvalues == PH_PPM){
+    gpio.stopBasePump_2();//P-2
+    gpio.stopAcidPump_3();//P-3
   }
   displayValue();
   delay(100);
@@ -342,4 +358,4 @@ void resetVariable() {
   elapsedTime = 0;
   pHvalues = 0;
   elsTime = 0;
-}
+} 

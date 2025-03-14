@@ -69,6 +69,7 @@ void GPIOManager::resetPump() {
 
 void GPIOManager::setFoodSourcePump_1() {
   mcp.digitalWrite(mcp.eGPB0, HIGH);
+  GPIOManager::foodSourceTime = millis();
   delay(100);
 }
 
@@ -78,6 +79,7 @@ void GPIOManager::stopFoodSourcePump_1() {
 }
 
 void GPIOManager::setBasePump_2() {
+  GPIOManager::basePumpTime = millis();
   mcp.digitalWrite(mcp.eGPB1, HIGH);
   delay(100);
 }
@@ -88,6 +90,7 @@ void GPIOManager::stopBasePump_2() {
 }
 
 void GPIOManager::setAcidPump_3() {
+  GPIOManager::acidPumpTime = millis();
   mcp.digitalWrite(mcp.eGPB2, HIGH);
   delay(100);
 }
@@ -108,6 +111,11 @@ void GPIOManager::setACmotor_5() {
 }
 
 void GPIOManager::setUVlight_6() {
+  mcp.digitalWrite(mcp.eGPB5, HIGH);
+  delay(100);
+}
+
+void GPIOManager::stopUVlight_6() {
   mcp.digitalWrite(mcp.eGPB5, HIGH);
   delay(100);
 }
