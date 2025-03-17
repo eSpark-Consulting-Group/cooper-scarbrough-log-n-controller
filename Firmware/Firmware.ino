@@ -6,23 +6,19 @@
 #include "IO_GPIO.hpp"
 #include "FirstScript.hpp"
 
-#define OXYGEN_PPM 5
-#define PH_PPM 7
-#define OFF_DELAY (5*1000)
+#define PH_PPM      7
+#define OXYGEN_PPM  5
+#define MAX_SCRIPTS 2
+#define OFF_DELAY   (5*1000)
+
 /*for 90 mints running */
 const unsigned long TOTAL_RUN_TIME = 120 ;  // 90 minutes in milliseconds
 const unsigned long INTERVAL = 10;        // 10 minutes in milliseconds
-
-// /*for 90 mints running */
-// const unsigned long TOTAL_RUN_TIME = 1L * 60L * 1000L;  // 1 minutes in milliseconds
-// const unsigned long INTERVAL = 10L * 1000L;        // 10 sec in milliseconds
 
 unsigned long startTime = 0;
 unsigned long lastIntervalTime = 0;
 unsigned long elapsedTime = 0;  // Store the elapsed time
 unsigned long elsTime = 1;
-
-const int MAX_SCRIPTS = 5;
 
 uint16_t homeColor = TFT_RED;
 uint16_t upColor = TFT_RED;
@@ -31,20 +27,22 @@ uint16_t selectColor = TFT_RED;
 uint16_t stopColor = TFT_RED;
 uint16_t startColor = TFT_RED;
 
-float oxygenSensor = 0;
 float pHvalues = 0;
+float oxygenSensor = 0;
 
-GPIOManager gpio;
-getScripts script;
-
+uint8_t countScript = 1;
 int selectedScript = 1;  // Variable to track selected script (1 or 2)
 bool isRunning = false;  // Flag to track if the script is running
 
 // For debouncing buttons
 bool downButtonPressed = false;
 bool upButtonPressed = false;
+bool selectButtonPressed = false;
 bool startButtonPressed = false;
 bool stopButtonPressed = false;
+
+GPIOManager gpio;
+getScripts script;
 
 // Function prototypes for your scripts
 void script1();
@@ -54,7 +52,8 @@ void script4();
 void script5();
 
 // Array of function pointers
-void (*scripts[MAX_SCRIPTS])() = { script1, script2, script3, script4, script5 };
+void (*scripts[MAX_SCRIPTS])() = { script1, script2};//For Two Scripts
+// void (*scripts[MAX_SCRIPTS])() = { script1, script2, script3, script4, script5 }; // For Five Scripts
 
 void setup() {
   Serial.begin(115200);
@@ -94,10 +93,10 @@ void drawUI() {
 
   // Draw the Registry box
   tft.drawRect(20, 63, 440, 60, TFT_RED);  // Highlight selected
-  tft.setTextColor(selectedScript == 1 ? TFT_GREEN : TFT_RED, TFT_BLACK);
+  tft.setTextColor(countScript == 1 ? TFT_GREEN : TFT_RED, TFT_BLACK);
   tft.setCursor(30, 77);
   tft.println("Microorganism #1 (script 1)");
-  tft.setTextColor(selectedScript == 2 ? TFT_GREEN : TFT_RED, TFT_BLACK);
+  tft.setTextColor(countScript == 2 ? TFT_GREEN : TFT_RED, TFT_BLACK);
   tft.setCursor(30, 102);
   tft.println("Microorganism #2 (script 2)");
 
@@ -155,13 +154,20 @@ void drawCircleStopButton(int x, int y, const char *label, uint16_t color) {
 }
 
 void drawInfoBox(int x, int y, const char *label, uint8_t data, const char *value, int values) {
-  tft.drawRect(x, y, 140, 50, TFT_RED);
+  tft.drawRect(x, y, 120, 50, TFT_RED);
   tft.setCursor(x + 10, y + 10);
   tft.setTextColor(TFT_RED);
   tft.println(label);
   tft.setCursor(x + 10, y + 30);
   tft.setTextColor(TFT_WHITE);
-  tft.println(data);
+  if(!data)
+  {
+    tft.println(0.00);
+  }
+  else
+  {
+    tft.println(data);
+  }
   tft.setCursor(x + 50, y + 30);
   tft.setTextColor(TFT_WHITE);
   tft.println(value);
@@ -172,28 +178,37 @@ void drawInfoBox(int x, int y, const char *label, uint8_t data, const char *valu
 
 void colorChangeStates() {
   // Handle button presses to switch between scripts
+  if (!gpio.getUpGPIO()) {
+    if (!upButtonPressed) {
+      countScript--;
+      if (countScript < 1) {
+        countScript = MAX_SCRIPTS;
+      }
+      upButtonPressed = true;
+    }
+  } else {
+    upButtonPressed = false;
+  }
+
   if (!gpio.getDownGPIO()) {
     if (!downButtonPressed) {
-      selectedScript++;
-      if (selectedScript > MAX_SCRIPTS) {
-        selectedScript = 1;
+      countScript++;
+      if (countScript > MAX_SCRIPTS) {
+        countScript = 1;
       }
       downButtonPressed = true;
     }
   } else {
     downButtonPressed = false;
   }
-
-  if (!gpio.getUpGPIO()) {
-    if (!upButtonPressed) {
-      selectedScript--;
-      if (selectedScript < 1) {
-        selectedScript = MAX_SCRIPTS;
-      }
-      upButtonPressed = true;
+  
+  if (!gpio.getSelectGPIO()) {
+    if (!selectButtonPressed) {
+      selectedScript = countScript;
+      selectButtonPressed = true;
     }
   } else {
-    upButtonPressed = false;
+    selectButtonPressed = false;
   }
 
   // Handle Start button press to start the selected script
@@ -221,12 +236,12 @@ void colorChangeStates() {
   }
 
   // Maintain button color change logic for display
-  homeColor = gpio.getHomeGPIO() ? TFT_RED : TFT_GREEN;
-  upColor = !upButtonPressed ? TFT_RED : TFT_GREEN;
-  downColor = !downButtonPressed ? TFT_RED : TFT_GREEN;
-  selectColor = gpio.getSelectGPIO() ? TFT_RED : TFT_GREEN;
-  startColor = !startButtonPressed ? TFT_RED : TFT_GREEN;
-  stopColor = !stopButtonPressed ? TFT_RED : TFT_GREEN;
+  homeColor   = !gpio.getHomeGPIO() ? TFT_GREEN : TFT_RED;
+  upColor     = upButtonPressed ? TFT_GREEN : TFT_RED;
+  downColor   = downButtonPressed ? TFT_GREEN : TFT_RED;
+  selectColor = selectButtonPressed ? TFT_GREEN : TFT_RED;
+  startColor  = startButtonPressed ? TFT_GREEN : TFT_RED;
+  stopColor   = stopButtonPressed ? TFT_GREEN : TFT_RED;
 }
 
 void displayValue() {
@@ -284,21 +299,23 @@ void script1() {
 
       if((millis() - gpio.foodSourceTime) >= OFF_DELAY)
       {
-        Serial.println("FOOD STOPPEDDDDDDDDDDDDDDD");
+        // Serial.println("FOOD STOPPEDDDDDDDDDDDDDDD");
         gpio.stopFoodSourcePump_1();
       }
       if((millis() - gpio.basePumpTime) >= OFF_DELAY)
       {
-        Serial.println("BASE STOPPEDDDDDDDDDDDDDDD");
+        // Serial.println("BASE STOPPEDDDDDDDDDDDDDDD");
         gpio.stopBasePump_2();
       }
       if((millis() - gpio.acidPumpTime) >= OFF_DELAY)
       {
-        Serial.println("ACID STOPPEDDDDDDDDDDDDDDD");
+        // Serial.println("ACID STOPPEDDDDDDDDDDDDDDD");
         gpio.stopAcidPump_3();
       }
 
       if (!gpio.getStopGPIO()) {
+        drawCircleRunButton(340, 250, "RUN", TFT_RED);
+        drawCircleStopButton(120, 250, "STOP", TFT_GREEN);
         resetVariable();
         displayValue();
         gpio.resetPump();
