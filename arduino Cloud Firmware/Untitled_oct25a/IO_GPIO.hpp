@@ -7,6 +7,10 @@ extern DFRobot_MCP23017 mcp;  // Declaration
 
 class GPIOManager {
 public:
+unsigned long foodSourceTime = 0;
+  unsigned long basePumpTime = 0;
+  unsigned long acidPumpTime = 0;
+  
   void setup();
   bool getHomeGPIO();
   bool getUpGPIO();
@@ -21,6 +25,7 @@ public:
   void setAirPump_4();
   void setACmotor_5();
   void setUVlight_6();
+  void stopUVlight_6();
   void stopFoodSourcePump_1();
   void stopAcidPump_3();
   void stopBasePump_2();

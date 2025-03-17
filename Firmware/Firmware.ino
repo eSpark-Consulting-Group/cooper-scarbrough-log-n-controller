@@ -1,5 +1,3 @@
-
-
 #include <Wire.h>
 #include <SPI.h>
 #include "gfx_conf.h"  // Assuming you have a GFX library for your display
@@ -287,11 +285,6 @@ void script1() {
 
       if (currentTime - startTime >= TOTAL_RUN_TIME * 60000) {
         Serial.println("Total time of 90 minutes has passed. Stopping the script.");
-        // isRunning = false;
-        // oxygenSensor = 0;
-        // startTime = 0;
-        // elapsedTime = 0;
-        // pHvalues = 0;
         resetVariable();
         displayValue();
         gpio.resetPump();

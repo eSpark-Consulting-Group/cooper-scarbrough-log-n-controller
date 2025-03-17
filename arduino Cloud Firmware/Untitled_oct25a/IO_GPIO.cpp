@@ -31,7 +31,6 @@ bool GPIOManager::readPin(uint8_t pin) {
   return (mcp.digitalRead(static_cast<DFRobot_MCP23017::ePin_t>(pin)) == 1);
 }
 
-
 // Reading Button States
 bool GPIOManager::getHomeGPIO() {
   return readPin(mcp.eGPA3);
@@ -64,7 +63,6 @@ void GPIOManager::resetPump() {
   delay(100);
 }
 
-
 void GPIOManager::setFoodSourcePump_1() {
   mcp.digitalWrite(mcp.eGPB0, HIGH);
   delay(100);
@@ -74,7 +72,6 @@ void GPIOManager::stopFoodSourcePump_1() {
   mcp.digitalWrite(mcp.eGPB0, LOW);
   delay(100);
 }
-
 
 void GPIOManager::setBasePump_2() {
   mcp.digitalWrite(mcp.eGPB1, HIGH);
@@ -107,6 +104,11 @@ void GPIOManager::setACmotor_5() {
 }
 
 void GPIOManager::setUVlight_6() {
+  mcp.digitalWrite(mcp.eGPB5, HIGH);
+  delay(100);
+}
+
+void GPIOManager::stopUVlight_6() {
   mcp.digitalWrite(mcp.eGPB5, HIGH);
   delay(100);
 }

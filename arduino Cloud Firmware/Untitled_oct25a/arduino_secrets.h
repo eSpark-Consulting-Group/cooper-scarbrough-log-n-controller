@@ -1,3 +1,3 @@
-#define SECRET_DEVICE_KEY "Pixel_4"
-#define SECRET_OPTIONAL_PASS "right445"
-#define SECRET_SSID "sii6QdhxBTvWuOiiD6hBbqc3O"
+#define SECRET_DEVICE_KEY "iwOEnTeIrUBqWAwC6!RvXMyse"
+#define SECRET_OPTIONAL_PASS "47356880"
+#define SECRET_SSID "eSpark Wifi"

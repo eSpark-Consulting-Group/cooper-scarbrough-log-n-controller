@@ -4,21 +4,21 @@
 #include <Arduino_ConnectionHandler.h>
 #include "arduino_secrets.h"
 
-const char DEVICE_LOGIN_NAME[]  = "917451eb-0817-48ee-b02e-b5fcc63ee71b";
+const char DEVICE_LOGIN_NAME[]  = "7de79580-6195-4862-84d6-b5a6129c386c";
 
 const char SSID[]               = SECRET_SSID;    // Network SSID (name)
 const char PASS[]               = SECRET_OPTIONAL_PASS;    // Network password (use for WPA, or use as key for WEP)
 const char DEVICE_KEY[]  =  SECRET_DEVICE_KEY;    // Secret device password
 
-void onLogentChange();
+// void onLogentChange();
 
-String logEvents;
+// String logEvents;
 
 void initProperties(){
 
   ArduinoCloud.setBoardId(DEVICE_LOGIN_NAME);
   ArduinoCloud.setSecretDeviceKey(DEVICE_KEY);
-  ArduinoCloud.addProperty(logEvents, READWRITE, ON_CHANGE, NULL);
+  // ArduinoCloud.addProperty(logEvents, READWRITE, ON_CHANGE, NULL);
 
 }
 

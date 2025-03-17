@@ -1,5 +1,4 @@
 #include <DFRobot_MCP23017.h>
-
 #include "thingProperties.h"
 #include <Wire.h>
 #include <SPI.h>
@@ -8,17 +7,20 @@
 #include "FirstScript.hpp"
 
 /* Script running parameters*/
-#define OXYGEN_PPM 5
-#define PH_PPM 7
-const unsigned long TOTAL_RUN_TIME = 120;  // 90 minutes in milliseconds
+#define PH_PPM      7
+#define OXYGEN_PPM  5
+#define MAX_SCRIPTS 2
+#define OFF_DELAY   (5*1000)
+
 const unsigned long INTERVAL = 10;  // 10 minutes in milliseconds
+const unsigned long TOTAL_RUN_TIME = 120;  // 90 minutes in milliseconds
 
 /* variables*/
 unsigned long startTime = 0;
 unsigned long lastIntervalTime = 0;
 unsigned long elsTime = 1 ;
 unsigned long elapsedTime = 0;  // Store the elapsed time
-const int MAX_SCRIPTS = 5;
+
 uint16_t homeColor = TFT_RED;
 uint16_t upColor = TFT_RED;
 uint16_t downColor = TFT_RED;
@@ -26,9 +28,9 @@ uint16_t selectColor = TFT_RED;
 uint16_t stopColor = TFT_RED;
 uint16_t startColor = TFT_RED;
 
-float oxygenSensor = 0;
 float pHvalues = 0;
-// uint8_t time = 0;
+float oxygenSensor = 0;
+
 uint8_t acid;
 uint8_t base;
 uint8_t stimulant;
@@ -36,12 +38,14 @@ uint8_t stimulant;
 GPIOManager gpio;
 getScripts script;
 
+uint8_t countScript = 1;
 int selectedScript = 1;  // Variable to track selected script (1 or 2)
 bool isRunning = false;  // Flag to track if the script is running
 
 // For debouncing buttons
 bool downButtonPressed = false;
 bool upButtonPressed = false;
+bool selectButtonPressed = false;
 bool startButtonPressed = false;
 bool stopButtonPressed = false;
 
@@ -53,7 +57,8 @@ void script4();
 void script5();
 
 // // Array of function pointers
-void (*scripts[MAX_SCRIPTS])() = { script1, script2, script3, script4, script5 };
+void (*scripts[MAX_SCRIPTS])() = { script1, script2};//For Two Scripts
+// void (*scripts[MAX_SCRIPTS])() = { script1, script2, script3, script4, script5 }; //For Five Scripts
 
 void setup() {
   Serial.begin(115200);
@@ -102,10 +107,10 @@ void drawUI() {
 
   // Draw the Registry box
   tft.drawRect(20, 63, 440, 60, TFT_RED);  // Highlight selected
-  tft.setTextColor(selectedScript == 1 ? TFT_GREEN : TFT_RED, TFT_BLACK);
+  tft.setTextColor(countScript == 1 ? TFT_GREEN : TFT_RED, TFT_BLACK);
   tft.setCursor(30, 77);
   tft.println("Microorganism #1 (script 1)");
-  tft.setTextColor(selectedScript == 2 ? TFT_GREEN : TFT_RED, TFT_BLACK);
+  tft.setTextColor(countScript == 2 ? TFT_GREEN : TFT_RED, TFT_BLACK);
   tft.setCursor(30, 102);
   tft.println("Microorganism #2 (script 2)");
 
@@ -115,28 +120,30 @@ void drawUI() {
   tft.setCursor(30, 140);
   tft.println("Selected:");
   tft.setCursor(30, 155);
+  tft.setTextColor(TFT_GREEN, TFT_BLACK);
   tft.println(selectedScript == 1 ? "Microorganism #1" : "Microorganism #2");
 
   // Draw Status section
+  tft.setTextColor(TFT_RED, TFT_BLACK);
   tft.drawRect(260, 132, 200, 40, TFT_RED);
   tft.setCursor(270, 140);
   tft.println("Status:");
   tft.setCursor(270, 155);
-  tft.println(isRunning ? "Running" : "Idle");
+  tft.setTextColor(TFT_GREEN, TFT_BLACK);
+  tft.println(isRunning ? "Running" : "Idle   ");
 
-  drawInfoBox(20, 179, "Time", elapsedTime, "/ ", TOTAL_RUN_TIME);
-  
-  drawInfoBox(180, 179, "pH", pHvalues, "/ ", PH_PPM);
- 
+  uint8_t time = 0;
+  drawInfoBox(20, 179, "Time", time, "/ ", TOTAL_RUN_TIME);
+  drawInfoBox(180, 179, "pH", pHvalues, "/ ",PH_PPM);
   drawInfoBox(340, 179, "Oxygen", oxygenSensor, "/ ", OXYGEN_PPM);
-
+  // displayValue();
   // Draw Run and Stop buttons
-  drawCircleRunButton(120, 250, "RUN", startColor);
-  drawCircleStopButton(340, 250, "STOP", stopColor);
-
+  // drawCircleRunButton(120, 250, "RUN", startColor);
+  // drawCircleStopButton(340, 250, "STOP", stopColor);
+   drawCircleRunButton(340, 250, "RUN", startColor);
+   drawCircleStopButton(120, 250, "STOP", stopColor);
   // Draw Signal bar
   tft.drawRect(400, 300, 50, 120, TFT_RED);  // Signal box
-   // ArduinoCloud.update();
 }
 
 void drawButton(int x, int y, const char *label, uint16_t color) {
@@ -167,7 +174,14 @@ void drawInfoBox(int x, int y, const char *label, uint8_t data, const char *valu
   tft.println(label);
   tft.setCursor(x + 10, y + 30);
   tft.setTextColor(TFT_WHITE);
-  tft.println(data);
+  if(!data)
+  {
+    tft.println(0.00);
+  }
+  else
+  {
+    tft.println(data);
+  }
   tft.setCursor(x + 50, y + 30);
   tft.setTextColor(TFT_WHITE);
   tft.println(value);
@@ -179,28 +193,37 @@ void drawInfoBox(int x, int y, const char *label, uint8_t data, const char *valu
 
 void colorChangeStates() {
   // Handle button presses to switch between scripts
+  if (!gpio.getUpGPIO()) {
+    if (!upButtonPressed) {
+      countScript--;
+      if (countScript < 1) {
+        countScript = MAX_SCRIPTS;
+      }
+      upButtonPressed = true;
+    }
+  } else {
+    upButtonPressed = false;
+  }
+
   if (!gpio.getDownGPIO()) {
     if (!downButtonPressed) {
-      selectedScript++;
-      if (selectedScript > MAX_SCRIPTS) {
-        selectedScript = 1;
+      countScript++;
+      if (countScript > MAX_SCRIPTS) {
+        countScript = 1;
       }
       downButtonPressed = true;
     }
   } else {
     downButtonPressed = false;
   }
-
-  if (!gpio.getUpGPIO()) {
-    if (!upButtonPressed) {
-      selectedScript--;
-      if (selectedScript < 1) {
-        selectedScript = MAX_SCRIPTS;
-      }
-      upButtonPressed = true;
+  
+  if (!gpio.getSelectGPIO()) {
+    if (!selectButtonPressed) {
+      selectedScript = countScript;
+      selectButtonPressed = true;
     }
   } else {
-    upButtonPressed = false;
+    selectButtonPressed = false;
   }
 
   // Handle Start button press to start the selected script
@@ -227,14 +250,13 @@ void colorChangeStates() {
   }
 
   // Maintain button color change logic for display
-  homeColor = gpio.getHomeGPIO() ? TFT_RED : TFT_GREEN;
-  upColor = gpio.getUpGPIO() ? TFT_RED : TFT_GREEN;
-  downColor = gpio.getDownGPIO() ? TFT_RED : TFT_GREEN;
-  selectColor = gpio.getSelectGPIO() ? TFT_RED : TFT_GREEN;
-  startColor = gpio.getStartGPIO() ? TFT_RED : TFT_GREEN;
-  stopColor = gpio.getStopGPIO() ? TFT_RED : TFT_GREEN;
-
-   ArduinoCloud.update();
+  homeColor   = !gpio.getHomeGPIO() ? TFT_GREEN : TFT_RED;
+  upColor     = upButtonPressed ? TFT_GREEN : TFT_RED;
+  downColor   = downButtonPressed ? TFT_GREEN : TFT_RED;
+  selectColor = selectButtonPressed ? TFT_GREEN : TFT_RED;
+  startColor  = startButtonPressed ? TFT_GREEN : TFT_RED;
+  stopColor   = stopButtonPressed ? TFT_GREEN : TFT_RED;
+  ArduinoCloud.update();
 }
 
 void displayValue() {
@@ -261,18 +283,18 @@ void displayValue() {
  
   // delay(100);
 
-  logEvents = String(elapsedTime) + ", " + String(pHvalues, 1) + "," + String(7) + "," + String(oxygenSensor, 1)+ "," + String(5) + ","+String(stimulant) +"," + String(base) + ","+ String(acid);
-  Serial.println(String(elapsedTime) + ", " + String(pHvalues, 1) + "," + String(7) + "," + String(oxygenSensor, 1) + "," + String(5) + "," +String(stimulant) + "," + String(base) + ","+ String(acid));
+  // logEvents = String(elapsedTime) + ", " + String(pHvalues, 1) + "," + String(7) + "," + String(oxygenSensor, 1)+ "," + String(5) + ","+String(stimulant) +"," + String(base) + ","+ String(acid);
+  // Serial.println(String(elapsedTime) + ", " + String(pHvalues, 1) + "," + String(7) + "," + String(oxygenSensor, 1) + "," + String(5) + "," +String(stimulant) + "," + String(base) + ","+ String(acid));
   
   ArduinoCloud.update();
 }
 
 // SCRIPTS#1 IMPLEMENTATIONS
 void script1() {
-   
   if (isRunning) {
     gpio.setAirPump_4();
     gpio.setACmotor_5();
+    gpio.stopUVlight_6();
     startTime = millis() ;
     lastIntervalTime = startTime;
     script1Running();
@@ -292,17 +314,31 @@ void script1() {
         resetVariable();
         displayValue();
         gpio.resetPump();
-        
       }
       
+      if((millis() - gpio.foodSourceTime) >= OFF_DELAY)
+      {
+        // Serial.println("FOOD STOPPEDDDDDDDDDDDDDDD");
+        gpio.stopFoodSourcePump_1();
+      }
+      if((millis() - gpio.basePumpTime) >= OFF_DELAY)
+      {
+        // Serial.println("BASE STOPPEDDDDDDDDDDDDDDD");
+        gpio.stopBasePump_2();
+      }
+      if((millis() - gpio.acidPumpTime) >= OFF_DELAY)
+      {
+        // Serial.println("ACID STOPPEDDDDDDDDDDDDDDD");
+        gpio.stopAcidPump_3();
+      }
+
       if (!gpio.getStopGPIO()) {
+        drawCircleRunButton(340, 250, "RUN", TFT_RED);
+        drawCircleStopButton(120, 250, "STOP", TFT_GREEN);
         resetVariable();
         displayValue();
         gpio.resetPump();
       }
-      // Add a small delay to avoid high CPU usage in the loop
-      // delay(100);
-      
     }
   }
 }
@@ -362,6 +398,6 @@ void resetVariable() {
   elsTime = 0;
 }
 
-void onLogEventsChange()  {
-  // Add your code here to act upon LogEvents change
-}
+// void onLogEventsChange()  {
+//   // Add your code here to act upon LogEvents change
+// }
