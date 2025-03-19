@@ -27,7 +27,6 @@ bool GPIOManager::readPin(uint8_t pin) {
   return (mcp.digitalRead(static_cast<DFRobot_MCP23017::ePin_t>(pin)) == 1);
 }
 
-
 // Reading Button States
 bool GPIOManager::getHomeGPIO() {
   return readPin(mcp.eGPA3);

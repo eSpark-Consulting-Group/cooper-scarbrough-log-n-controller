@@ -12,7 +12,7 @@
 #define MAX_SCRIPTS 2
 #define OFF_DELAY   (5*1000)
 
-const unsigned long INTERVAL = 10;  // 10 minutes in milliseconds
+const unsigned long INTERVAL = 5;          // 5 minutes in milliseconds
 const unsigned long TOTAL_RUN_TIME = 120;  // 90 minutes in milliseconds
 
 /* variables*/
@@ -79,7 +79,7 @@ void setup() {
   
   script.setup();
   delay(500);
-  // logEvents = "Time , pH(actual), pH(Traget) ,Oxygen(actual), Oxygen(target),P1(Stimulant),P2(Acid),P3(Base)";
+  logEvents = "Time , pH(actual), pH(Traget) ,Oxygen(actual), Oxygen(target),P1(Stimulant),P2(Acid),P3(Base)";
 }
 
 void loop() {
@@ -136,12 +136,10 @@ void drawUI() {
   drawInfoBox(20, 179, "Time", time, "/ ", TOTAL_RUN_TIME);
   drawInfoBox(180, 179, "pH", pHvalues, "/ ",PH_PPM);
   drawInfoBox(340, 179, "Oxygen", oxygenSensor, "/ ", OXYGEN_PPM);
-  // displayValue();
-  // Draw Run and Stop buttons
-  // drawCircleRunButton(120, 250, "RUN", startColor);
-  // drawCircleStopButton(340, 250, "STOP", stopColor);
-   drawCircleRunButton(340, 250, "RUN", startColor);
-   drawCircleStopButton(120, 250, "STOP", stopColor);
+
+  drawCircleRunButton(340, 250, "RUN", startColor);
+  drawCircleStopButton(120, 250, "STOP", stopColor);
+
   // Draw Signal bar
   tft.drawRect(400, 300, 50, 120, TFT_RED);  // Signal box
 }
@@ -168,7 +166,7 @@ void drawCircleStopButton(int x, int y, const char *label, uint16_t color) {
 }
 
 void drawInfoBox(int x, int y, const char *label, uint8_t data, const char *value, int values) {
-  tft.drawRect(x, y, 140, 50, TFT_RED);
+  tft.drawRect(x, y, 120, 50, TFT_RED);
   tft.setCursor(x + 10, y + 10);
   tft.setTextColor(TFT_RED);
   tft.println(label);
@@ -231,9 +229,6 @@ void colorChangeStates() {
     if (!startButtonPressed) {
       isRunning = true;
       startButtonPressed = true;
-      // startTime = millis();
-
-      // Call the selected script function
     }
   } else {
     startButtonPressed = false;
@@ -260,31 +255,23 @@ void colorChangeStates() {
 }
 
 void displayValue() {
-  
-  // elapsedTime = (millis() - startTime) / 60000;
   tft.fillRect(30, 179 + 30, 40, 10, TFT_BLACK);
   tft.setCursor(20 + 10, 179 + 30);
   tft.setTextColor(TFT_WHITE);
   tft.println(elapsedTime);
-
-  // delay(100);
 
   tft.fillRect(180 + 10, 179 + 30, 40, 10, TFT_BLACK);
   tft.setCursor(180 + 10, 179 + 30);
   tft.setTextColor(TFT_WHITE);
   tft.println(pHvalues, 1);
 
-  // delay(100);
-
   tft.fillRect(350, 179 + 30, 40, 10, TFT_BLACK);
   tft.setCursor(340 + 10, 179 + 30);
   tft.setTextColor(TFT_WHITE);
   tft.println(oxygenSensor, 1);
- 
-  // delay(100);
 
-  // logEvents = String(elapsedTime) + ", " + String(pHvalues, 1) + "," + String(7) + "," + String(oxygenSensor, 1)+ "," + String(5) + ","+String(stimulant) +"," + String(base) + ","+ String(acid);
-  // Serial.println(String(elapsedTime) + ", " + String(pHvalues, 1) + "," + String(7) + "," + String(oxygenSensor, 1) + "," + String(5) + "," +String(stimulant) + "," + String(base) + ","+ String(acid));
+  logEvents = String(elapsedTime) + ", " + String(pHvalues, 1) + "," + String(7) + "," + String(oxygenSensor, 1)+ "," + String(5) + ","+String(stimulant) +"," + String(base) + ","+ String(acid);
+  Serial.println(String(elapsedTime) + ", " + String(pHvalues, 1) + "," + String(7) + "," + String(oxygenSensor, 1) + "," + String(5) + "," +String(stimulant) + "," + String(base) + ","+ String(acid));
   
   ArduinoCloud.update();
 }
@@ -356,37 +343,34 @@ void script1Running() {
 
   if (oxygenSensor > OXYGEN_PPM) {
     gpio.setFoodSourcePump_1();
-    // displayValue();
     stimulant = 1;
-  }else{
+  }
+  else{
     stimulant = 0;
     gpio.stopFoodSourcePump_1();
-    }
+  }
   
   if (pHvalues < PH_PPM) {
     gpio.setBasePump_2();
     gpio.stopAcidPump_3();
-    // displayValue();
-    base = 1; 
-    
-  }else{base = 0;}
-  if (pHvalues > PH_PPM) {
+    acid = 0;
+    base = 1;
+  }
+  else if (pHvalues > PH_PPM) {
     gpio.setAcidPump_3();
     gpio.stopBasePump_2();
-    // displayValue();
     acid = 1;
-  }else{acid = 0;}
-
-  if(pHvalues == PH_PPM){
-     gpio.stopAcidPump_3();
-     gpio.stopBasePump_2();
-     acid = 0;
-     base = 0;
+    base = 0;
+  }
+  else if(pHvalues == PH_PPM){
+    gpio.stopAcidPump_3();
+    gpio.stopBasePump_2();
+    acid = 0;
+    base = 0;
   }
   
   displayValue();
   delay(100);
-   
 }
 
 void resetVariable() {
@@ -398,6 +382,6 @@ void resetVariable() {
   elsTime = 0;
 }
 
-// void onLogEventsChange()  {
-//   // Add your code here to act upon LogEvents change
-// }
+void onLogEventsChange()  {
+  // Add your code here to act upon LogEvents change
+}

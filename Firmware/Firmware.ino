@@ -10,8 +10,8 @@
 #define OFF_DELAY   (5*1000)
 
 /*for 90 mints running */
+const unsigned long INTERVAL = 5;           // 5 minutes in milliseconds
 const unsigned long TOTAL_RUN_TIME = 120 ;  // 90 minutes in milliseconds
-const unsigned long INTERVAL = 10;        // 10 minutes in milliseconds
 
 unsigned long startTime = 0;
 unsigned long lastIntervalTime = 0;

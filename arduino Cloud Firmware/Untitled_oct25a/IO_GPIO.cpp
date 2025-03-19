@@ -1,17 +1,19 @@
 #include <DFRobot_MCP23017.h>
 #include "IO_GPIO.hpp"
-// #include <Wire.h>
+#include <Wire.h>
+
+#define SDA_PIN 8
+#define SCL_PIN 18
+
 DFRobot_MCP23017 mcp(Wire, 0x20);  // Definition
 
 void GPIOManager::setup() {
- 
-// Wire.begin();
-// Wire.setClock(100000);
+  Wire.begin(SDA_PIN, SCL_PIN);
   while (mcp.begin() != 0) {
     Serial.println("Initialization of the chip failed, please confirm that the chip connection is correct!");
     delay(1000);
   }
-   Serial.println("Initialization");
+  Serial.println("Initialization");
   mcp.pinMode(mcp.eGPA0, INPUT);
   mcp.pinMode(mcp.eGPA1, INPUT);
   mcp.pinMode(mcp.eGPA2, INPUT);
@@ -64,6 +66,7 @@ void GPIOManager::resetPump() {
 }
 
 void GPIOManager::setFoodSourcePump_1() {
+  GPIOManager::foodSourceTime = millis(); 
   mcp.digitalWrite(mcp.eGPB0, HIGH);
   delay(100);
 }
@@ -74,6 +77,7 @@ void GPIOManager::stopFoodSourcePump_1() {
 }
 
 void GPIOManager::setBasePump_2() {
+  GPIOManager::basePumpTime = millis();
   mcp.digitalWrite(mcp.eGPB1, HIGH);
   delay(100);
 }
@@ -84,6 +88,7 @@ void GPIOManager::stopBasePump_2() {
 }
 
 void GPIOManager::setAcidPump_3() {
+  GPIOManager::acidPumpTime = millis();
   mcp.digitalWrite(mcp.eGPB2, HIGH);
   delay(100);
 }
