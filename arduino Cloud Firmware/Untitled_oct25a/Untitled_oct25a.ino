@@ -1,5 +1,8 @@
 #include <DFRobot_MCP23017.h>
+#define ARDUINO_CLOUD
+#if defined (ARDUINO_CLOUD)
 #include "thingProperties.h"
+#endif
 #include <Wire.h>
 #include <SPI.h>
 #include "gfx_conf.h"  
@@ -63,11 +66,15 @@ void (*scripts[MAX_SCRIPTS])() = { script1, script2};//For Two Scripts
 void setup() {
   Serial.begin(115200);
   delay(1500);
+
+#if defined (ARDUINO_CLOUD)
   initProperties();
   ArduinoCloud.begin(ArduinoIoTPreferredConnection);
   setDebugMessageLevel(2);
   ArduinoCloud.printDebugInfo();
- 
+  logEvents = "Time , pH(actual), pH(Traget) ,Oxygen(actual), Oxygen(target),P1(Stimulant),P2(Acid),P3(Base)";
+#endif
+
   tft.begin();
   tft.fillScreen(TFT_BLACK);
   tft.setTextSize(1.5);
@@ -76,25 +83,21 @@ void setup() {
   drawUI();
    
   gpio.setup();
-  
   script.setup();
   delay(500);
-  logEvents = "Time , pH(actual), pH(Traget) ,Oxygen(actual), Oxygen(target),P1(Stimulant),P2(Acid),P3(Base)";
 }
 
 void loop() {
-   ArduinoCloud.update();
-  // Your code here 
+#if defined(ARDUINO_CLOUD)
+  ArduinoCloud.update();
+#endif
   colorChangeStates(); 
-
   delay(100);
 
   drawUI();
-
   delay(100);
 
   scripts[selectedScript - 1]();
-
   delay(10);  // Small delay for debounce purposes
 }
 
@@ -188,7 +191,6 @@ void drawInfoBox(int x, int y, const char *label, uint8_t data, const char *valu
   tft.println(values);
 }
 
-
 void colorChangeStates() {
   // Handle button presses to switch between scripts
   if (!gpio.getUpGPIO()) {
@@ -251,7 +253,9 @@ void colorChangeStates() {
   selectColor = selectButtonPressed ? TFT_GREEN : TFT_RED;
   startColor  = startButtonPressed ? TFT_GREEN : TFT_RED;
   stopColor   = stopButtonPressed ? TFT_GREEN : TFT_RED;
+#if defined(ARDUINO_CLOUD)
   ArduinoCloud.update();
+#endif
 }
 
 void displayValue() {
@@ -269,11 +273,11 @@ void displayValue() {
   tft.setCursor(340 + 10, 179 + 30);
   tft.setTextColor(TFT_WHITE);
   tft.println(oxygenSensor, 1);
-
+#if defined (ARDUINO_CLOUD)
   logEvents = String(elapsedTime) + ", " + String(pHvalues, 1) + "," + String(7) + "," + String(oxygenSensor, 1)+ "," + String(5) + ","+String(stimulant) +"," + String(base) + ","+ String(acid);
   Serial.println(String(elapsedTime) + ", " + String(pHvalues, 1) + "," + String(7) + "," + String(oxygenSensor, 1) + "," + String(5) + "," +String(stimulant) + "," + String(base) + ","+ String(acid));
-  
   ArduinoCloud.update();
+#endif
 }
 
 // SCRIPTS#1 IMPLEMENTATIONS
@@ -380,8 +384,4 @@ void resetVariable() {
   elapsedTime = 0;
   pHvalues = 0;
   elsTime = 0;
-}
-
-void onLogEventsChange()  {
-  // Add your code here to act upon LogEvents change
 }
