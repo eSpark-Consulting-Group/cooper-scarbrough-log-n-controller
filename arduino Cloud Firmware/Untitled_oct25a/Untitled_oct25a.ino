@@ -1,22 +1,30 @@
 #include <DFRobot_MCP23017.h>
-#define ARDUINO_CLOUD
-#if defined (ARDUINO_CLOUD)
-#include "thingProperties.h"
-#endif
 #include <Wire.h>
 #include <SPI.h>
 #include "gfx_conf.h"  
 #include "IO_GPIO.hpp"
 #include "FirstScript.hpp"
 
-/* Script running parameters*/
-#define PH_PPM      7
-#define OXYGEN_PPM  5
-#define MAX_SCRIPTS 2
-#define OFF_DELAY   (5*1000)
+#define ARDUINO_CLOUD
+#if defined (ARDUINO_CLOUD)
+#include "thingProperties.h"
+#endif
 
-const unsigned long INTERVAL = 5;          // 5 minutes in milliseconds
-const unsigned long TOTAL_RUN_TIME = 120;  // 90 minutes in milliseconds
+/* Script running parameters*/
+#define INTERVAL         5
+#define OFF_DELAY   (5*1000)
+#define MAX_SCRIPTS     3
+#define DISPLAY_SCRIPTS 2
+
+//Script 1
+#define PH_PPM1          7
+#define OXYGEN_PPM1      5
+#define TOTAL_RUN_TIME1  120
+
+//Script 2
+#define PH_PPM2         7.4
+#define OXYGEN_PPM2      9
+#define TOTAL_RUN_TIME2 180
 
 /* variables*/
 unsigned long startTime = 0;
@@ -38,9 +46,7 @@ uint8_t acid;
 uint8_t base;
 uint8_t stimulant;
 
-GPIOManager gpio;
-getScripts script;
-
+int scriptIndex = 0;
 uint8_t countScript = 1;
 int selectedScript = 1;  // Variable to track selected script (1 or 2)
 bool isRunning = false;  // Flag to track if the script is running
@@ -52,6 +58,15 @@ bool selectButtonPressed = false;
 bool startButtonPressed = false;
 bool stopButtonPressed = false;
 
+GPIOManager gpio;
+getScripts script;
+
+const char* scriptNames[MAX_SCRIPTS] = {
+  "1.Microorganism",
+  "2.Bacillus thuringiensis kurstaki",
+  "3.Sterilization Script"
+};
+
 // Function prototypes for your scripts
 void script1();
 void script2();
@@ -60,7 +75,7 @@ void script4();
 void script5();
 
 // // Array of function pointers
-void (*scripts[MAX_SCRIPTS])() = { script1, script2};//For Two Scripts
+void (*scripts[MAX_SCRIPTS])() = { script1, script2, script3};//For Three Scripts
 // void (*scripts[MAX_SCRIPTS])() = { script1, script2, script3, script4, script5 }; //For Five Scripts
 
 void setup() {
@@ -109,22 +124,31 @@ void drawUI() {
   drawButton(370, 15, "Select", selectColor);
 
   // Draw the Registry box
-  tft.drawRect(20, 63, 440, 60, TFT_RED);  // Highlight selected
-  tft.setTextColor(countScript == 1 ? TFT_GREEN : TFT_RED, TFT_BLACK);
-  tft.setCursor(30, 77);
-  tft.println("Microorganism #1 (script 1)");
-  tft.setTextColor(countScript == 2 ? TFT_GREEN : TFT_RED, TFT_BLACK);
-  tft.setCursor(30, 102);
-  tft.println("Microorganism #2 (script 2)");
+  tft.drawRect(20, 63, 440, 60, TFT_RED);
+  for (int i = 0; i < DISPLAY_SCRIPTS; i++)
+  {
+    int scriptNum = scriptIndex + i;
+    if (scriptNum >= MAX_SCRIPTS)
+    {
+      tft.fillRect(30, 77 + (25 * i), 300, 20, TFT_BLACK);
+      continue;
+    }
+    // Set text color based on selection
+    tft.setTextColor(countScript == scriptNum + 1 ? TFT_GREEN : TFT_RED, TFT_BLACK);
+    tft.fillRect(30, 77 + (25 * i), 300, 20, TFT_BLACK);
+    tft.setCursor(30, 77 + (25 * i));
+    tft.println(scriptNames[scriptNum]);
+  }
 
   // Draw Selected section
   tft.setTextColor(TFT_RED, TFT_BLACK);
   tft.drawRect(20, 132, 200, 40, TFT_RED);
   tft.setCursor(30, 140);
   tft.println("Selected:");
-  tft.setCursor(30, 155);
+  tft.fillRect(30, 155, 180, 16, TFT_BLACK);
+  tft.setCursor(60, 155);
   tft.setTextColor(TFT_GREEN, TFT_BLACK);
-  tft.println(selectedScript == 1 ? "Microorganism #1" : "Microorganism #2");
+  tft.println(selectedScript);
 
   // Draw Status section
   tft.setTextColor(TFT_RED, TFT_BLACK);
@@ -136,15 +160,31 @@ void drawUI() {
   tft.println(isRunning ? "Running" : "Idle   ");
 
   uint8_t time = 0;
-  drawInfoBox(20, 179, "Time", time, "/ ", TOTAL_RUN_TIME);
-  drawInfoBox(180, 179, "pH", pHvalues, "/ ",PH_PPM);
-  drawInfoBox(340, 179, "Oxygen", oxygenSensor, "/ ", OXYGEN_PPM);
+
+  if(selectedScript == 1)
+  {
+    drawInfoBox(20, 179, "Time", time, "/ ", TOTAL_RUN_TIME1);
+    drawInfoBox(180, 179, "pH", pHvalues, "/ ",PH_PPM1);
+    drawInfoBox(340, 179, "Oxygen", oxygenSensor, "/ ", OXYGEN_PPM1);
+  }
+  else if(selectedScript == 2)
+  {
+    drawInfoBox(20, 179, "Time", time, "/ ", TOTAL_RUN_TIME2);
+    drawInfoBox(180, 179, "pH", pHvalues, "/ ",PH_PPM2);
+    drawInfoBox(340, 179, "Oxygen", oxygenSensor, "/ ", OXYGEN_PPM2);
+  }
+  else if(selectedScript == 3)
+  {
+    drawInfoBox(20, 179, "Time", time, "/ ", 0);
+    drawInfoBox(180, 179, "pH", pHvalues, "/ ",0.00);
+    drawInfoBox(340, 179, "Oxygen", oxygenSensor, "/ ", 0.00);
+  }
 
   drawCircleRunButton(340, 250, "RUN", startColor);
   drawCircleStopButton(120, 250, "STOP", stopColor);
 
   // Draw Signal bar
-  tft.drawRect(400, 300, 50, 120, TFT_RED);  // Signal box
+  tft.drawRect(400, 300, 50, 120, TFT_RED);
 }
 
 void drawButton(int x, int y, const char *label, uint16_t color) {
@@ -168,7 +208,7 @@ void drawCircleStopButton(int x, int y, const char *label, uint16_t color) {
   tft.print(label);
 }
 
-void drawInfoBox(int x, int y, const char *label, uint8_t data, const char *value, int values) {
+void drawInfoBox(int x, int y, const char *label, uint8_t data, const char *value, float values) {
   tft.drawRect(x, y, 120, 50, TFT_RED);
   tft.setCursor(x + 10, y + 10);
   tft.setTextColor(TFT_RED);
@@ -186,9 +226,10 @@ void drawInfoBox(int x, int y, const char *label, uint8_t data, const char *valu
   tft.setCursor(x + 50, y + 30);
   tft.setTextColor(TFT_WHITE);
   tft.println(value);
+  tft.fillRect(x + 60, y + 30, 50, 16, TFT_BLACK);
   tft.setCursor(x + 60, y + 30);
   tft.setTextColor(TFT_WHITE);
-  tft.println(values);
+  tft.println(values,1);
 }
 
 void colorChangeStates() {
@@ -198,6 +239,10 @@ void colorChangeStates() {
       countScript--;
       if (countScript < 1) {
         countScript = MAX_SCRIPTS;
+        scriptIndex = MAX_SCRIPTS - DISPLAY_SCRIPTS;
+      } else if (countScript <= scriptIndex) {
+        scriptIndex--;
+        if (scriptIndex < 0) scriptIndex = 0;
       }
       upButtonPressed = true;
     }
@@ -205,20 +250,33 @@ void colorChangeStates() {
     upButtonPressed = false;
   }
 
-  if (!gpio.getDownGPIO()) {
-    if (!downButtonPressed) {
+  if (!gpio.getDownGPIO())
+  {
+    if (!downButtonPressed)
+    {
       countScript++;
-      if (countScript > MAX_SCRIPTS) {
+      if (countScript > MAX_SCRIPTS)
+      {
         countScript = 1;
+        scriptIndex = 0;
+      }
+      else if (countScript > scriptIndex + DISPLAY_SCRIPTS-1) 
+      {
+        scriptIndex++;
+        if (scriptIndex > MAX_SCRIPTS - DISPLAY_SCRIPTS+1)
+          scriptIndex = MAX_SCRIPTS - DISPLAY_SCRIPTS;
       }
       downButtonPressed = true;
     }
-  } else {
+  }
+  else
+  {
     downButtonPressed = false;
   }
-  
+
   if (!gpio.getSelectGPIO()) {
     if (!selectButtonPressed) {
+      // selectedScript = constrain(countScript, 1, MAX_SCRIPTS);
       selectedScript = countScript;
       selectButtonPressed = true;
     }
@@ -300,7 +358,7 @@ void script1() {
         script1Running();
       }
 
-      if (currentTime - startTime >= TOTAL_RUN_TIME * 60000) {
+      if (currentTime - startTime >= TOTAL_RUN_TIME1 * 60000) {
         Serial.println("Total time of 90 minutes has passed. Stopping the script.");
         resetVariable();
         displayValue();
@@ -334,9 +392,76 @@ void script1() {
   }
 }
 
-// SCRIPTS#1 IMPLEMENTATIONS
-void script2() {}
-void script3() {}
+// SCRIPTS#2 IMPLEMENTATIONS
+void script2()
+{
+  if (isRunning) {
+    gpio.setAirPump_4();
+    startTime = millis() ;
+    lastIntervalTime = startTime;
+    script1Running();
+    while (isRunning)
+    {  
+      unsigned long currentTime = millis() ;
+      // Check if 10 minutes have passed since the last reading
+      if (currentTime - lastIntervalTime >= INTERVAL * 60000) {
+        elapsedTime = ((currentTime - lastIntervalTime) * elsTime) / 60000 ;
+        elsTime ++;
+        lastIntervalTime = currentTime;
+        script1Running();
+      }
+
+      if (currentTime - startTime >= TOTAL_RUN_TIME2 * 60000) {
+        Serial.println("Total time of 90 minutes has passed. Stopping the script.");
+        resetVariable();
+        displayValue();
+        gpio.resetPump();
+      }
+      
+      if((millis() - gpio.foodSourceTime) >= OFF_DELAY)
+      {
+        // Serial.println("FOOD STOPPEDDDDDDDDDDDDDDD");
+        gpio.stopFoodSourcePump_1();
+      }
+      if((millis() - gpio.basePumpTime) >= OFF_DELAY)
+      {
+        // Serial.println("BASE STOPPEDDDDDDDDDDDDDDD");
+        gpio.stopBasePump_2();
+      }
+      if((millis() - gpio.acidPumpTime) >= OFF_DELAY)
+      {
+        // Serial.println("ACID STOPPEDDDDDDDDDDDDDDD");
+        gpio.stopAcidPump_3();
+      }
+
+      if (!gpio.getStopGPIO()) {
+        drawCircleRunButton(340, 250, "RUN", TFT_RED);
+        drawCircleStopButton(120, 250, "STOP", TFT_GREEN);
+        resetVariable();
+        displayValue();
+        gpio.resetPump();
+      }
+    }
+  }
+}
+
+// SCRIPTS#3 IMPLEMENTATIONS
+void script3()
+{
+  while (isRunning)
+  {
+    gpio.setACmotor_5();
+    gpio.setUVlight_6();
+
+    if (!gpio.getStopGPIO()) {
+      drawCircleRunButton(340, 250, "RUN", TFT_RED);
+      drawCircleStopButton(120, 250, "STOP", TFT_GREEN);
+      resetVariable();
+      displayValue();
+      gpio.resetPump();
+    }
+  }
+}
 void script4() {}
 void script5() {}
 
@@ -345,7 +470,7 @@ void script1Running() {
   oxygenSensor = script.getOxygenSensorValue();
   pHvalues = script.getpHSensorValue();
 
-  if (oxygenSensor > OXYGEN_PPM) {
+  if (oxygenSensor > OXYGEN_PPM1) {
     gpio.setFoodSourcePump_1();
     stimulant = 1;
   }
@@ -354,19 +479,19 @@ void script1Running() {
     gpio.stopFoodSourcePump_1();
   }
   
-  if (pHvalues < PH_PPM) {
+  if (pHvalues < PH_PPM1) {
     gpio.setBasePump_2();
     gpio.stopAcidPump_3();
     acid = 0;
     base = 1;
   }
-  else if (pHvalues > PH_PPM) {
+  else if (pHvalues > PH_PPM1) {
     gpio.setAcidPump_3();
     gpio.stopBasePump_2();
     acid = 1;
     base = 0;
   }
-  else if(pHvalues == PH_PPM){
+  else if(pHvalues == PH_PPM1){
     gpio.stopAcidPump_3();
     gpio.stopBasePump_2();
     acid = 0;
