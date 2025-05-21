@@ -1,4 +1,4 @@
-#include "OxygenSensor.hpp"
+#include "OxygenSensor.h"
 
 RS485Modbus::RS485Modbus(uint8_t rxPin, uint8_t txPin, long baudRate)
   : rxPin(rxPin), txPin(txPin), baudRate(baudRate) {}

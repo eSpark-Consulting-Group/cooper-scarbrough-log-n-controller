@@ -1,5 +1,5 @@
-#ifndef RS485MODBUS_HPP
-#define RS485MODBUS_HPP
+#ifndef RS485MODBUS_H
+#define RS485MODBUS_H
 
 #include <Arduino.h>  // Add this line
 #include <HardwareSerial.h>

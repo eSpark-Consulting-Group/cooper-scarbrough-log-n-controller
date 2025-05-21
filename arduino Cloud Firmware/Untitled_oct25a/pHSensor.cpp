@@ -1,6 +1,6 @@
 
 
-#include "pHSensor.hpp"
+#include "pHSensor.h"
 
 RS485ModbuspH::RS485ModbuspH(uint8_t rxPin, uint8_t txPin, long baudRate)
     : rxPin(rxPin), txPin(txPin), baudRate(baudRate) {}

@@ -1,5 +1,5 @@
 #include <DFRobot_MCP23017.h>
-#include "IO_GPIO.hpp"
+#include "IO_GPIO.h"
 #include <Wire.h>
 
 #define SDA_PIN 8

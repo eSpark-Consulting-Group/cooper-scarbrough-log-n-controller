@@ -2,8 +2,8 @@
 #include <Wire.h>
 #include <SPI.h>
 #include "gfx_conf.h"  
-#include "IO_GPIO.hpp"
-#include "FirstScript.hpp"
+#include "IO_GPIO.h"
+#include "FirstScript.h"
 
 #define ARDUINO_CLOUD
 #if defined (ARDUINO_CLOUD)

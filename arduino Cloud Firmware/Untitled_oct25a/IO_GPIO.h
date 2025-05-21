@@ -1,5 +1,5 @@
-#ifndef IO_GPIO_HPP
-#define IO_GPIO_HPP
+#ifndef IO_GPIO_H
+#define IO_GPIO_H
 
 #include <DFRobot_MCP23017.h>
 

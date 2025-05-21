@@ -1,5 +1,5 @@
-#include "OxygenSensor.hpp"
-#include "pHSensor.hpp"
+#include "OxygenSensor.h"
+#include "pHSensor.h"
 
 #define RXD2 4
 #define TXD2 5
