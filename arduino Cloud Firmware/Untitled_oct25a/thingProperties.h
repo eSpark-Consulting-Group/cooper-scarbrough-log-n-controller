@@ -4,7 +4,7 @@
 #include <Arduino_ConnectionHandler.h>
 #include "arduino_secrets.h"
 
-const char DEVICE_LOGIN_NAME[]  = "5241506e-615f-4982-a4f7-cc497415721b";
+const char DEVICE_LOGIN_NAME[]  = "";
 
 const char SSID[]        = SECRET_SSID;    // Network SSID (name)
 const char PASS[]        = SECRET_OPTIONAL_PASS;    // Network password (use for WPA, or use as key for WEP)
