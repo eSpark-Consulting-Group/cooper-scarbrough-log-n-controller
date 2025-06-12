@@ -11,7 +11,7 @@
 #endif
 
 /* Script running parameters*/
-#define INTERVAL         5
+#define INTERVAL         0.5
 #define OFF_DELAY   (5*1000)
 #define MAX_SCRIPTS     3
 #define DISPLAY_SCRIPTS 2
@@ -78,6 +78,57 @@ void script5();
 void (*scripts[MAX_SCRIPTS])() = { script1, script2, script3};//For Three Scripts
 // void (*scripts[MAX_SCRIPTS])() = { script1, script2, script3, script4, script5 }; //For Five Scripts
 
+// void doThisOnDisconnect(){
+//   /* add your custom code here */
+//   WiFi.begin(SECRET_SSID,SECRET_OPTIONAL_PASS);
+// }
+
+// static unsigned long lastCloudCheck = 0;
+// const unsigned long cloudCheckInterval = 30000;
+// unsigned long lastCloudConnected = millis();
+
+// WiFi.onEvent([](WiFiEvent_t event) {
+//   if (event == SYSTEM_EVENT_STA_DISCONNECTED) {
+//     Serial.println("WiFi Disconnected! Attempting to reconnect...");
+//     WiFi.begin(SECRET_SSID, SECRET_OPTIONAL_PASS);
+//   }
+// });
+
+void checkCloudConnection() {
+  static unsigned long lastAttemptTime = 0;
+  const unsigned long retryDelay = 10000; // Retry every 10 seconds
+
+  if (millis() - lastAttemptTime > retryDelay) {
+    lastAttemptTime = millis();
+    if (WiFi.status() == WL_CONNECTED) {
+      Serial.println("Trying to reconnect to Arduino Cloud...");
+      ArduinoCloud.disconnect();
+      initProperties();
+      ArduinoCloud.begin(ArduinoIoTPreferredConnection);
+      // testData = "lastTime:" + String(lastAttemptTime);
+      ArduinoCloud.update();
+      // ArduinoCloud.attachThing(DEVICE_LOGIN_NAME);
+    } else {
+      Serial.println("WiFi not connected. Waiting for reconnection...");
+    }
+  }
+}
+
+void checkConnection()
+{
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("WiFi disconnected. Reconnecting...");
+    WiFi.disconnect();
+    WiFi.begin(SECRET_SSID, SECRET_OPTIONAL_PASS);
+    delay(1000);  // Give time to reconnect
+  }
+
+  if (!ArduinoCloud.connected()) {
+    // Serial.println("Cloud disconnected. Attempting to reconnect...");
+    checkCloudConnection();  // You already defined this function
+  }
+}
+
 void setup() {
   Serial.begin(115200);
   delay(1500);
@@ -86,6 +137,7 @@ void setup() {
   initProperties();
   ArduinoCloud.begin(ArduinoIoTPreferredConnection);
   setDebugMessageLevel(2);
+  // ArduinoCloud.addCallback(ArduinoIoTCloudEvent::DISCONNECT, doThisOnDisconnect);
   ArduinoCloud.printDebugInfo();
   logEvents = "Time , pH(actual), pH(Traget) ,Oxygen(actual), Oxygen(target),P1(Stimulant),P2(Acid),P3(Base)";
 #endif
@@ -105,6 +157,7 @@ void setup() {
 void loop() {
 #if defined(ARDUINO_CLOUD)
   ArduinoCloud.update();
+  checkConnection();
 #endif
   colorChangeStates(); 
   delay(100);
@@ -348,6 +401,7 @@ void script1() {
     lastIntervalTime = startTime;
     script1Running();
     while (isRunning) {
+      checkConnection();
       
       unsigned long currentTime = millis() ;
       // Check if 10 minutes have passed since the last reading
@@ -402,6 +456,7 @@ void script2()
     script1Running();
     while (isRunning)
     {  
+      checkConnection();
       unsigned long currentTime = millis() ;
       // Check if 10 minutes have passed since the last reading
       if (currentTime - lastIntervalTime >= INTERVAL * 60000) {
@@ -450,6 +505,7 @@ void script3()
 {
   while (isRunning)
   {
+    checkConnection();
     gpio.setACmotor_5();
     gpio.setUVlight_6();
 

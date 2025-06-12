@@ -1,5 +1,3 @@
-#! python
-
 import pandas as pd
 import os
 from datetime import datetime
@@ -23,48 +21,62 @@ else:
     csv_file = csv_files[0]
     print(f"Processing file: {csv_file}")
     
-    # Load your CSV file
+    # Load CSV
     df = pd.read_csv(csv_file)
 
-    # Delete the 'time' column if it exists
+    # Drop 'time' column if it exists
     if 'time' in df.columns:
         df = df.drop(columns=['time'])
 
-    # Remove any inverted commas (quotes) from all string entries in the DataFrame
-    df = df.applymap(lambda x: x.replace('"', ' ') if isinstance(x, str) else x)
+    # Remove quote characters from all string entries
+    df = df.map(lambda x: x.replace('"', ' ') if isinstance(x, str) else x)
 
-    # Split the 'value' column into separate columns
-    df[['TimeDuration', 'pH(actual)', 'pH(target)', 'Oxygen(actual)', 'Oxygen(target)', 'P1(Stimulant)', 'P2(base)', 'P3(acid)']] = df['value'].str.replace('"', '').str.split(',', expand=True)
+    # Define known invalid header string to ignore
+    invalid_header = "Time , pH(actual), pH(Traget) ,Oxygen(actual), Oxygen(target),P1(Stimulant),P2(Acid),P3(Base)"
+
+    # Filter out rows with invalid or missing 'value' field
+    def is_valid_value(val):
+        if not isinstance(val, str):
+            return False
+        if val.strip() == "":
+            return False
+        if val.strip() == invalid_header:
+            return False
+        parts = val.split(',')
+        return len(parts) == 8
+
+    df = df[df['value'].apply(is_valid_value)]
+
+    # Now split the value column into individual columns
+    df[['TimeDuration', 'pH(actual)', 'pH(target)', 'Oxygen(actual)', 'Oxygen(target)', 'P1(Stimulant)', 'P2(base)', 'P3(acid)']] = df['value'].str.strip().str.split(',', expand=True)
 
     # Drop the original 'value' column
     df = df.drop(columns=['value'])
 
-    # Clean up whitespace from columns (optional, if there are spaces around values)
+    # Strip whitespace from string columns
     df = df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
 
-    # Format the 'TimeDuration' column as mm:ss
+    # Format TimeDuration as mm:ss
     def format_time(duration):
         try:
-            total_seconds = int(duration)  # Assuming the value is in seconds
+            total_seconds = int(duration)
             minutes = total_seconds // 60
             seconds = total_seconds % 60
             return f"{minutes:02}:{seconds:02}"
         except ValueError:
-            return duration  # return original if not convertible
+            return duration
 
     df['TimeDuration'] = df['TimeDuration'].apply(format_time)
 
-    df = df[df['TimeDuration'] != '00:00']
+    # # Remove entries where TimeDuration is "00:00" or all values are NaN
+    # df = df[df['TimeDuration'] != '00:00']
+    # df = df.dropna(how='all')
 
-    df = df.dropna(how='all')
-
-    # Display the updated DataFrame
+    # Show the cleaned dataframe
     print(df)
 
-    # Generate a timestamp for the file name
+    # Save to timestamped CSV
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     updated_file_name = f'Timestamp_{timestamp}.csv'
-
-    # Save the updated DataFrame to a new CSV file without quotes around values
-    df.to_csv(updated_file_name, index=False, quoting=0)  # quoting=0 means no quotes in output
+    df.to_csv(updated_file_name, index=False, quoting=0)
     print(f"Updated CSV saved as '{updated_file_name}'")
