@@ -116,6 +116,7 @@ void checkCloudConnection() {
 
 void checkConnection()
 {
+  ArduinoCloud.update();
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("WiFi disconnected. Reconnecting...");
     WiFi.disconnect();
@@ -410,6 +411,7 @@ void script1() {
         elsTime ++;
         lastIntervalTime = currentTime;
         script1Running();
+        displayValue();
       }
 
       if (currentTime - startTime >= TOTAL_RUN_TIME1 * 60000) {
@@ -438,8 +440,8 @@ void script1() {
       if (!gpio.getStopGPIO()) {
         drawCircleRunButton(340, 250, "RUN", TFT_RED);
         drawCircleStopButton(120, 250, "STOP", TFT_GREEN);
-        resetVariable();
         displayValue();
+        resetVariable();
         gpio.resetPump();
       }
     }
@@ -464,12 +466,13 @@ void script2()
         elsTime ++;
         lastIntervalTime = currentTime;
         script1Running();
+        displayValue();
       }
 
       if (currentTime - startTime >= TOTAL_RUN_TIME2 * 60000) {
         Serial.println("Total time of 90 minutes has passed. Stopping the script.");
-        resetVariable();
         displayValue();
+        resetVariable();
         gpio.resetPump();
       }
       
@@ -492,8 +495,8 @@ void script2()
       if (!gpio.getStopGPIO()) {
         drawCircleRunButton(340, 250, "RUN", TFT_RED);
         drawCircleStopButton(120, 250, "STOP", TFT_GREEN);
-        resetVariable();
         displayValue();
+        resetVariable();
         gpio.resetPump();
       }
     }
@@ -512,8 +515,8 @@ void script3()
     if (!gpio.getStopGPIO()) {
       drawCircleRunButton(340, 250, "RUN", TFT_RED);
       drawCircleStopButton(120, 250, "STOP", TFT_GREEN);
-      resetVariable();
       displayValue();
+      resetVariable();
       gpio.resetPump();
     }
   }
@@ -554,7 +557,7 @@ void script1Running() {
     base = 0;
   }
   
-  displayValue();
+  // displayValue();
   delay(100);
 }
 

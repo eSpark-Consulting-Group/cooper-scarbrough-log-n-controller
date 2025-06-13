@@ -16,7 +16,8 @@ void initProperties(){
 
   ArduinoCloud.setBoardId(DEVICE_LOGIN_NAME);
   ArduinoCloud.setSecretDeviceKey(DEVICE_KEY);
-  ArduinoCloud.addProperty(logEvents, READWRITE, ON_CHANGE, NULL);
+  ArduinoCloud.addProperty(logEvents, READ, ON_CHANGE, NULL);
+
 }
 
 WiFiConnectionHandler ArduinoIoTPreferredConnection(SSID, PASS);
